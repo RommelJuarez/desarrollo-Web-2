@@ -23,6 +23,7 @@ public class GenerarJson extends HttpServlet {
 
         // Configurar la respuesta como JSON
         resp.setContentType("application/json;charset=UTF-8");
+        resp.setHeader("Content-Disposition", "attachment;filename=productos.json");
 
         // Generar JSON
         StringBuilder json = new StringBuilder();

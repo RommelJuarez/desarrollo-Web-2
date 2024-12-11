@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultar SRI</title>
+</head>
+<body>
+<h1>Consultar SRI</h1>
+<form id="sriForm">
+    <label for="ruc">RUC:</label>
+    <input type="text" id="ruc" name="ruc" required>
+    <button type="submit">Consultar</button>
+</form>
+
+<button id="consultarBtn">Consultar Base</button>
+<!-- Botones para descargar PDF y Excel -->
+<button id="downloadPdfBtn">Descargar PDF</button>
+<button id="downloadExcelBtn">Descargar Excel</button>
+
+<div id="response"></div>
+
+<script>
+    // Cuando se hace clic en el botón Consultar
+    document.getElementById('consultarBtn').addEventListener('click', async (e) => {
+        e.preventDefault(); // Prevenir que se recargue la página
+
+        const ruc = document.getElementById('ruc').value;
+        const resultadosDiv = document.getElementById('resultados');
+
+        // Verificamos si se ingresó un RUC
+        if (!ruc) {
+            alert("Por favor, ingresa un RUC.");
+            return;
+        }
+
+        try {
+            // Realizamos la solicitud al nuevo endpoint `/consultarbase`
+            const response = await fetch(`/sriapi/consultarbase?ruc=${ruc}`);
+
+            if (response.ok) {
+                const data = await response.text(); // Recibimos el HTML generado por el servlet
+
+                // Insertamos el HTML de los resultados en el contenedor de resultados
+                resultadosDiv.innerHTML = data; // Este data es la tabla con los resultados
+
+            } else {
+                resultadosDiv.innerText = "Error al realizar la consulta.";
+            }
+        } catch (error) {
+            resultadosDiv.innerText = 'Error al realizar la consulta.';
+        }
+    });
+    document.getElementById('sriForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const ruc = document.getElementById('ruc').value;
+        const responseDiv = document.getElementById('response');
+
+        try {
+            const response = await fetch(`/sriapi/consultar?ruc=${ruc}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                responseDiv.innerText = JSON.stringify(data, null, 2);
+            } else {
+                responseDiv.innerText = data.error;
+            }
+        } catch (error) {
+            responseDiv.innerText = 'Error al realizar la consulta.';
+        }
+    });
+
+    // Función para manejar la descarga de PDF
+    document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+        const ruc = document.getElementById('ruc').value;
+        if (!ruc) {
+            alert("Por favor, ingresa un RUC.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/sriapi/consultar/generar-pdf?ruc=${ruc}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'sri_consulta.pdf';
+                link.click();
+            } else {
+                alert("Error al generar el PDF.");
+            }
+        } catch (error) {
+            alert("Error al descargar el PDF.");
+        }
+    });
+
+    // Función para manejar la descarga de Excel
+    document.getElementById('downloadExcelBtn').addEventListener('click', async () => {
+        const ruc = document.getElementById('ruc').value;
+        if (!ruc) {
+            alert("Por favor, ingresa un RUC.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/sriapi/consultar/generar-excel?ruc=${ruc}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'sri_consulta.xlsx';
+                link.click();
+            } else {
+                alert("Error al generar el Excel.");
+            }
+        } catch (error) {
+            alert("Error al descargar el Excel.");
+        }
+    });
+</script>
+</body>
+</html>
